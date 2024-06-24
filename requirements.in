@@ -1,0 +1,16 @@
+attrs
+build
+click
+fastjsonschema
+jsonschema
+jupytext
+mdurl
+nbformat
+packaging
+pip
+platformdirs
+referencing
+setuptools
+tomli
+traitlets
+wheel
