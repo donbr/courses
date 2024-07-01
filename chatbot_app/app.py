@@ -1,15 +1,17 @@
-# app5.p
+# app.py
 import weave
 from llm_interface import get_llm_response
 from tool_handler import process_tool_call, tools
-from config import SYSTEM_PROMPT
+from config import SYSTEM_PROMPT, WEAVE_PROJECT
 from conversation_manager import ConversationManager
 from response_formatter import extract_reply
+
+weave.init(WEAVE_PROJECT)
 
 @weave.op()
 def simple_chat():
     conversation = ConversationManager()
-    
+
     print("Welcome to TechNova Customer Support! How can I assist you today?")
     while True:
         user_message = input("\nUser: ")

@@ -4,8 +4,10 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-API_KEY = os.getenv('ANTHROPIC_API_KEY')
+ANTHROPIC_API_KEY = os.getenv('ANTHROPIC_API_KEY')
 MODEL_NAME = "claude-3-5-sonnet-20240620"
+WANDB_API_KEY = os.getenv('WANDB_API_KEY')
+WEAVE_PROJECT = "anthropic_chatbot_app"
 
 SYSTEM_PROMPT = """
 You are a customer support chat bot for an online retailer called Blackbird. 

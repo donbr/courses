@@ -1,45 +1,197 @@
 import os
 import re
-import json
 import anthropic
 import weave
 
-weave.init("anthropic-chat-with-tools")
-client = anthropic.Client(api_key=os.getenv('ANTHROPIC_API_KEY'))
+weave.init("anthropic_chat_with_tools")
+client = anthropic.Client(api_key=os.getenv("ANTHROPIC_API_KEY"))
+WANDB_API_KEY = os.getenv("WANDB_API_KEY")
 
 MODEL_NAME = "claude-3-5-sonnet-20240620"
 # MODEL_NAME = "claude-3-sonnet-20240229"
 # MODEL_NAME = "claude-3-opus-20240229"
 
+
 class FakeDatabase:
     def __init__(self):
         self.customers = [
-            {"id": "1213210", "name": "John Doe", "email": "john@gmail.com", "phone": "123-456-7890", "username": "johndoe"},
-            {"id": "2837622", "name": "Priya Patel", "email": "priya@candy.com", "phone": "987-654-3210", "username": "priya123"},
-            {"id": "3924156", "name": "Liam Nguyen", "email": "lnguyen@yahoo.com", "phone": "555-123-4567", "username": "liamn"},
-            {"id": "4782901", "name": "Aaliyah Davis", "email": "aaliyahd@hotmail.com", "phone": "111-222-3333", "username": "adavis"},
-            {"id": "5190753", "name": "Hiroshi Nakamura", "email": "hiroshi@gmail.com", "phone": "444-555-6666", "username": "hiroshin"},
-            {"id": "6824095", "name": "Fatima Ahmed", "email": "fatimaa@outlook.com", "phone": "777-888-9999", "username": "fatimaahmed"},
-            {"id": "7135680", "name": "Alejandro Rodriguez", "email": "arodriguez@protonmail.com", "phone": "222-333-4444", "username": "alexr"},
-            {"id": "8259147", "name": "Megan Anderson", "email": "megana@gmail.com", "phone": "666-777-8888", "username": "manderson"},
-            {"id": "9603481", "name": "Kwame Osei", "email": "kwameo@yahoo.com", "phone": "999-000-1111", "username": "kwameo"},
-            {"id": "1057426", "name": "Mei Lin", "email": "meilin@gmail.com", "phone": "333-444-5555", "username": "mlin"}
+            {
+                "id": "1213210",
+                "name": "John Doe",
+                "email": "john@gmail.com",
+                "phone": "123-456-7890",
+                "username": "johndoe",
+            },
+            {
+                "id": "2837622",
+                "name": "Priya Patel",
+                "email": "priya@candy.com",
+                "phone": "987-654-3210",
+                "username": "priya123",
+            },
+            {
+                "id": "3924156",
+                "name": "Liam Nguyen",
+                "email": "lnguyen@yahoo.com",
+                "phone": "555-123-4567",
+                "username": "liamn",
+            },
+            {
+                "id": "4782901",
+                "name": "Aaliyah Davis",
+                "email": "aaliyahd@hotmail.com",
+                "phone": "111-222-3333",
+                "username": "adavis",
+            },
+            {
+                "id": "5190753",
+                "name": "Hiroshi Nakamura",
+                "email": "hiroshi@gmail.com",
+                "phone": "444-555-6666",
+                "username": "hiroshin",
+            },
+            {
+                "id": "6824095",
+                "name": "Fatima Ahmed",
+                "email": "fatimaa@outlook.com",
+                "phone": "777-888-9999",
+                "username": "fatimaahmed",
+            },
+            {
+                "id": "7135680",
+                "name": "Alejandro Rodriguez",
+                "email": "arodriguez@protonmail.com",
+                "phone": "222-333-4444",
+                "username": "alexr",
+            },
+            {
+                "id": "8259147",
+                "name": "Megan Anderson",
+                "email": "megana@gmail.com",
+                "phone": "666-777-8888",
+                "username": "manderson",
+            },
+            {
+                "id": "9603481",
+                "name": "Kwame Osei",
+                "email": "kwameo@yahoo.com",
+                "phone": "999-000-1111",
+                "username": "kwameo",
+            },
+            {
+                "id": "1057426",
+                "name": "Scooby Doo",
+                "email": "scooby@doo.com",
+                "phone": "333-444-5555",
+                "username": "sdoo",
+            },
         ]
 
         self.orders = [
-            {"id": "24601", "customer_id": "1213210", "product": "Wireless Headphones", "quantity": 1, "price": 79.99, "status": "Shipped"},
-            {"id": "13579", "customer_id": "1213210", "product": "Smartphone Case", "quantity": 2, "price": 19.99, "status": "Processing"},
-            {"id": "97531", "customer_id": "2837622", "product": "Bluetooth Speaker", "quantity": 1, "price": "49.99", "status": "Shipped"}, 
-            {"id": "86420", "customer_id": "3924156", "product": "Fitness Tracker", "quantity": 1, "price": 129.99, "status": "Delivered"},
-            {"id": "54321", "customer_id": "4782901", "product": "Laptop Sleeve", "quantity": 3, "price": 24.99, "status": "Shipped"},
-            {"id": "19283", "customer_id": "5190753", "product": "Wireless Mouse", "quantity": 1, "price": 34.99, "status": "Processing"},
-            {"id": "74651", "customer_id": "6824095", "product": "Gaming Keyboard", "quantity": 1, "price": 89.99, "status": "Delivered"},
-            {"id": "30298", "customer_id": "7135680", "product": "Portable Charger", "quantity": 2, "price": 29.99, "status": "Shipped"},
-            {"id": "47652", "customer_id": "8259147", "product": "Smartwatch", "quantity": 1, "price": 199.99, "status": "Processing"},
-            {"id": "61984", "customer_id": "9603481", "product": "Noise-Cancelling Headphones", "quantity": 1, "price": 149.99, "status": "Shipped"},
-            {"id": "58243", "customer_id": "1057426", "product": "Wireless Earbuds", "quantity": 2, "price": 99.99, "status": "Delivered"},
-            {"id": "90357", "customer_id": "1213210", "product": "Smartphone Case", "quantity": 1, "price": 19.99, "status": "Shipped"},
-            {"id": "28164", "customer_id": "2837622", "product": "Wireless Headphones", "quantity": 2, "price": 79.99, "status": "Processing"}
+            {
+                "id": "24601",
+                "customer_id": "1213210",
+                "product": "Wireless Headphones",
+                "quantity": 1,
+                "price": 79.99,
+                "status": "Shipped",
+            },
+            {
+                "id": "13579",
+                "customer_id": "1213210",
+                "product": "Smartphone Case",
+                "quantity": 2,
+                "price": 19.99,
+                "status": "Processing",
+            },
+            {
+                "id": "97531",
+                "customer_id": "2837622",
+                "product": "Bluetooth Speaker",
+                "quantity": 1,
+                "price": "49.99",
+                "status": "Shipped",
+            },
+            {
+                "id": "86420",
+                "customer_id": "3924156",
+                "product": "Fitness Tracker",
+                "quantity": 1,
+                "price": 129.99,
+                "status": "Delivered",
+            },
+            {
+                "id": "54321",
+                "customer_id": "4782901",
+                "product": "Laptop Sleeve",
+                "quantity": 3,
+                "price": 24.99,
+                "status": "Shipped",
+            },
+            {
+                "id": "19283",
+                "customer_id": "5190753",
+                "product": "Wireless Mouse",
+                "quantity": 1,
+                "price": 34.99,
+                "status": "Processing",
+            },
+            {
+                "id": "74651",
+                "customer_id": "6824095",
+                "product": "Gaming Keyboard",
+                "quantity": 1,
+                "price": 89.99,
+                "status": "Delivered",
+            },
+            {
+                "id": "30298",
+                "customer_id": "7135680",
+                "product": "Portable Charger",
+                "quantity": 2,
+                "price": 29.99,
+                "status": "Shipped",
+            },
+            {
+                "id": "47652",
+                "customer_id": "8259147",
+                "product": "Smartwatch",
+                "quantity": 1,
+                "price": 199.99,
+                "status": "Processing",
+            },
+            {
+                "id": "61984",
+                "customer_id": "9603481",
+                "product": "Noise-Cancelling Headphones",
+                "quantity": 1,
+                "price": 149.99,
+                "status": "Shipped",
+            },
+            {
+                "id": "58243",
+                "customer_id": "1057426",
+                "product": "Bedazzled Blue Jeans",
+                "quantity": 2,
+                "price": 99.99,
+                "status": "Delivered",
+            },
+            {
+                "id": "90357",
+                "customer_id": "1213210",
+                "product": "Smartphone Case",
+                "quantity": 1,
+                "price": 19.99,
+                "status": "Shipped",
+            },
+            {
+                "id": "28164",
+                "customer_id": "2837622",
+                "product": "Wireless Headphones",
+                "quantity": 2,
+                "price": 79.99,
+                "status": "Processing",
+            },
         ]
 
     def get_user(self, key, value):
@@ -50,7 +202,6 @@ class FakeDatabase:
             return f"Couldn't find a user with {key} of {value}"
         else:
             raise ValueError(f"Invalid key: {key}")
-        
         return None
 
     def get_order_by_id(self, order_id):
@@ -58,7 +209,7 @@ class FakeDatabase:
             if order["id"] == order_id:
                 return order
         return None
-    
+
     def get_customer_orders(self, customer_id):
         return [order for order in self.orders if order["customer_id"] == customer_id]
 
@@ -72,6 +223,7 @@ class FakeDatabase:
                 return "Order has already shipped.  Can't cancel it."
         return "Can't find that order!"
 
+
 tools = [
     {
         "name": "get_user",
@@ -82,15 +234,15 @@ tools = [
                 "key": {
                     "type": "string",
                     "enum": ["email", "phone", "username"],
-                    "description": "The attribute to search for a user by (email, phone, or username)."
+                    "description": "The attribute to search for a user by (email, phone, or username).",
                 },
                 "value": {
                     "type": "string",
-                    "description": "The value to match for the specified attribute."
-                }
+                    "description": "The value to match for the specified attribute.",
+                },
             },
-            "required": ["key", "value"]
-        }
+            "required": ["key", "value"],
+        },
     },
     {
         "name": "get_order_by_id",
@@ -100,11 +252,11 @@ tools = [
             "properties": {
                 "order_id": {
                     "type": "string",
-                    "description": "The unique identifier for the order."
+                    "description": "The unique identifier for the order.",
                 }
             },
-            "required": ["order_id"]
-        }
+            "required": ["order_id"],
+        },
     },
     {
         "name": "get_customer_orders",
@@ -114,11 +266,11 @@ tools = [
             "properties": {
                 "customer_id": {
                     "type": "string",
-                    "description": "The customer_id belonging to the user"
+                    "description": "The customer_id belonging to the user",
                 }
             },
-            "required": ["customer_id"]
-        }
+            "required": ["customer_id"],
+        },
     },
     {
         "name": "cancel_order",
@@ -128,15 +280,16 @@ tools = [
             "properties": {
                 "order_id": {
                     "type": "string",
-                    "description": "The order_id pertaining to a particular order"
+                    "description": "The order_id pertaining to a particular order",
                 }
             },
-            "required": ["order_id"]
-        }
-    }
+            "required": ["order_id"],
+        },
+    },
 ]
 
 db = FakeDatabase()
+
 
 @weave.op()
 def process_tool_call(tool_name, tool_input):
@@ -148,16 +301,18 @@ def process_tool_call(tool_name, tool_input):
         return db.get_customer_orders(tool_input["customer_id"])
     elif tool_name == "cancel_order":
         return db.cancel_order(tool_input["order_id"])
-    
+
+
 def extract_reply(text):
-    pattern = r'<reply>(.*?)</reply>'
+    pattern = r"<reply>(.*?)</reply>"
     match = re.search(pattern, text, re.DOTALL)
     if match:
         return match.group(1)
     else:
-        return None    
+        return None
 
-@weave.op()    
+
+@weave.op()
 def simple_chat():
     system_prompt = """
     You are a customer support chat bot for an online retailer called TechNova. 
@@ -174,36 +329,35 @@ def simple_chat():
     user_message = input("\nUser: ")
     messages = [{"role": "user", "content": user_message}]
     while True:
-        #If the last message is from the assistant, get another input from the user
+        # If the last message is from the assistant, get another input from the user
         if messages[-1].get("role") == "assistant":
             user_message = input("\nUser: ")
             messages.append({"role": "user", "content": user_message})
 
-        #Send a request to Claude
+        # Send a request to Claude
         response = client.messages.create(
             model=MODEL_NAME,
             system=system_prompt,
             max_tokens=4096,
             tools=tools,
-            messages=messages
+            messages=messages,
         )
         # Update messages to include Claude's response
-        messages.append(
-            {"role": "assistant", "content": response.content}
-        )
+        messages.append({"role": "assistant", "content": response.content})
 
-        #If Claude stops because it wants to use a tool:
+        # If Claude stops because it wants to use a tool:
         if response.stop_reason == "tool_use":
-            tool_use = response.content[-1] #Naive approach assumes only 1 tool is called at a time
+            tool_use = response.content[
+                -1
+            ]  # Naive approach assumes only 1 tool is called at a time
             tool_name = tool_use.name
             tool_input = tool_use.input
             print(f"======Claude wants to use the {tool_name} tool======")
 
-
-            #Actually run the underlying tool functionality on our db
+            # Actually run the underlying tool functionality on our db
             tool_result = process_tool_call(tool_name, tool_input)
 
-            #Add our tool_result message:
+            # Add our tool_result message:
             messages.append(
                 {
                     "role": "user",
@@ -216,10 +370,11 @@ def simple_chat():
                     ],
                 },
             )
-        else: 
-            #If Claude does NOT want to use a tool, just print out the text reponse
+        else:
+            # If Claude does NOT want to use a tool, just print out the text reponse
             model_reply = extract_reply(response.content[0].text)
-            print("\nTechNova Support: " + f"{model_reply}" )
+            print("\nTechNova Support: " + f"{model_reply}")
+
 
 # Start the chat!!
 simple_chat()
