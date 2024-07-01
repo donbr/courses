@@ -1,4 +1,5 @@
 # tool_handler.py
+import weave
 from database import FakeDatabase
 
 db = FakeDatabase()
@@ -67,6 +68,7 @@ tools = [
     }
 ]
 
+@weave.op()
 def process_tool_call(tool_name, tool_input):
     if tool_name == "get_user":
         return db.get_user(tool_input["key"], tool_input["value"])

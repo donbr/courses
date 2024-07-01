@@ -1,10 +1,12 @@
-# app5.py
+# app5.p
+import weave
 from llm_interface import get_llm_response
 from tool_handler import process_tool_call, tools
 from config import SYSTEM_PROMPT
 from conversation_manager import ConversationManager
 from response_formatter import extract_reply
 
+@weave.op()
 def simple_chat():
     conversation = ConversationManager()
     
